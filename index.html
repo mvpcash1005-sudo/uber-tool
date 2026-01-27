@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Uber 全能駕駛戰情室</title>
+    <title>Uber 全能駕駛戰情室 Pro</title>
     <style>
         /* --- 全局設定 (暗黑駕駛模式) --- */
-        body { background-color: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, Roboto, sans-serif; margin: 0; padding: 0; padding-bottom: 70px; }
+        body { background-color: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, Roboto, sans-serif; margin: 0; padding: 0; padding-bottom: 80px; }
         h2 { margin: 0; padding: 15px; text-align: center; background: #111; color: #00ff99; border-bottom: 1px solid #333; font-size: 18px; }
         
         /* --- 底部導航列 --- */
@@ -23,10 +23,15 @@
         /* --- 通用元件樣式 --- */
         input, select { width: 100%; padding: 12px; background: #222; border: 1px solid #444; color: #fff; border-radius: 8px; font-size: 16px; margin-bottom: 10px; box-sizing: border-box; }
         button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        label { color: #aaa; font-size: 13px; margin-bottom: 4px; display: block; margin-top: 5px; }
+        
         .btn-green { background: #00c853; color: white; }
         .btn-blue { background: #2979ff; color: white; }
-        .btn-red { background: #d32f2f; color: white; }
         .btn-gps { width: 50px; background: #ff9800; color: white; margin-top: 0; }
+
+        /* 隱藏區塊 (用於行李/寵物細節) */
+        .hidden-section { display: none; background: #2a2a2a; padding: 10px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid #ff9800; }
+        .warning-text { color: #ff5252; font-size: 12px; margin-top: 5px; }
         
         /* 獵金雷達卡片 */
         .card { background: #1a1a1a; border-radius: 8px; padding: 15px; margin-bottom: 15px; border-left: 4px solid #444; position: relative; }
@@ -86,112 +91,225 @@
     <div id="tab-calc" class="tab-content">
         <div id="trafficStatus" class="status-tag status-normal" style="width:100%; text-align:center; box-sizing:border-box;">偵測時段中...</div>
         
-        <label style="color:#888; font-size:12px;">上車地點</label>
-        <input type="text" id="startAddr" placeholder="請輸入地址">
+        <label>📍 上車地點</label>
+        <input type="text" id="startAddr" placeholder="請輸入上車地址">
         
-        <label style="color:#888; font-size:12px;">下車地點</label>
-        <input type="text" id="endAddr" placeholder="請輸入地址">
-        
-        <button class="btn-blue" onclick="calculateFare()">💰 計算報價</button>
+        <label>🏁 下車地點</label>
+        <input type="text" id="endAddr" placeholder="請輸入下車地址">
+
+        <label>📅 預定用車時間</label>
+        <input type="datetime-local" id="bookingTime">
+
+        <div style="display: flex; gap: 10px;">
+            <div style="flex: 1;">
+                <label>👥 乘客人數</label>
+                <select id="passengerCount">
+                    <option value="1">1人</option>
+                    <option value="2">2人</option>
+                    <option value="3">3人</option>
+                    <option value="4">4人</option>
+                </select>
+            </div>
+            <div style="flex: 1;">
+                <label>🧳 是否有行李</label>
+                <select id="hasLuggage" onchange="toggleLuggage()">
+                    <option value="no">無</option>
+                    <option value="yes">有</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="luggageSection" class="hidden-section">
+            <label style="color:#fff; margin-top:0;">🎒 有幾個行李箱？</label>
+            <input type="number" id="luggageCount" placeholder="請輸入數量 (例: 2)" style="margin-bottom:0;">
+        </div>
+
+        <label>🐶 是否有寵物</label>
+        <select id="hasPet" onchange="togglePet()">
+            <option value="no">無</option>
+            <option value="yes">有</option>
+        </select>
+
+        <div id="petSection" class="hidden-section" style="border-left-color: #ff5252;">
+            <div style="font-weight:bold; color:#fff;">⚠️ 寵物乘車規定：</div>
+            <div class="warning-text">• 寵物必須裝籠才載<br>• 恕不搭載大型犬</div>
+        </div>
+        <button class="btn-blue" onclick="calculateFare()">💰 產生報價單</button>
 
         <div id="calcResult" class="price-display" style="display:none;">
             <div style="color:#aaa; font-size:12px;">預估車資</div>
             <div class="big-price" id="displayPrice">$0</div>
-            <div style="color:#888; font-size:13px; text-align:left; margin-top:10px;">
-                📏 距離：<span id="displayDist">0</span> km<br>
+            
+            <div style="background:#222; padding:10px; border-radius:8px; margin-top:10px; text-align:left; font-size:13px; color:#ddd; line-height:1.6;">
+                📏 里程：<span id="displayDist">0</span> km<br>
                 ⏱️ 時間：<span id="displayTime">0</span> 分<br>
-                🚦 延滯係數：<span id="displayFactor">一般</span>
+                👥 乘客：<span id="resPax">1</span>人<br>
+                🧳 行李：<span id="resLug">無</span><br>
+                🐶 寵物：<span id="resPet">無</span><br>
+                ⚠️ <b>注意事項：請先匯款</b>
             </div>
             
-            <div style="margin-top:20px; text-align:center; color:#888; font-size:12px; margin-bottom:5px;">👇 客人操作步驟 👇</div>
+            <div style="margin-top:20px; text-align:center; color:#888; font-size:12px; margin-bottom:5px;">👇 傳送給客人 👇</div>
             <div class="line-actions">
-                <a href="#" id="addFriendLink" target="_blank" class="btn-add-friend">
-                    1. 先加好友
-                </a>
-                <a href="#" id="lineLink" class="btn-send-quote" target="_blank">
-                    2. 發送報價單
-                </a>
+                <a href="#" id="addFriendLink" target="_blank" class="btn-add-friend">1. 加好友</a>
+                <a href="#" id="lineLink" class="btn-send-quote" target="_blank">2. 發送報價單</a>
             </div>
-            <div style="font-size:11px; color:#666; margin-top:5px; text-align:center;">(點擊發送後，請在好友清單中點選我)</div>
+            <div style="font-size:11px; color:#666; margin-top:5px; text-align:center;">(點擊發送後，請在清單中點選我)</div>
         </div>
     </div>
 
     <div id="tab-strategy" class="tab-content">
         <div class="strategy-box">
-            <div class="strategy-title">🛑 停損法則 (Stop Loss)</div>
-            <div class="strategy-text">
-                接人 > 8分鐘：<b>拒接</b> (除非加成 > 1.5x)<br>
-                接人 > 行程時間：<b>絕對拒接</b> (虧本生意)
-            </div>
+            <div class="strategy-title">🛑 停損法則</div>
+            <div class="strategy-text">接人>8分鐘拒接，除非加成>1.5x。</div>
         </div>
         <div class="strategy-box">
             <div class="strategy-title">⚖️ 黃金比例 (1:2)</div>
-            <div class="strategy-text">
-                接人 5 分鐘，行程至少要 10 分鐘。<br>
-                若比例低於 1:2，僅在為了衝趟次獎勵時才接。
-            </div>
+            <div class="strategy-text">接人5分鐘，行程至少要10分鐘。</div>
         </div>
         <div class="strategy-box">
             <div class="strategy-title">🗺️ 地形戰術</div>
             <div class="strategy-text">
-                <b>07:00-09:00：</b> 待在新北 (板橋/三重) 接進城單。<br>
-                <b>17:00-19:00：</b> 待在北市 (內科/信義) 接回程單。<br>
-                <b>紅區陷阱：</b> 不要停在紅區正中心，停在邊緣 500m 處。
-            </div>
-        </div>
-        <div class="strategy-box">
-            <div class="strategy-title">👻 洗白定位</div>
-            <div class="strategy-text">
-                空車 > 10分鐘沒單：<br>
-                1. 下線 (Offline)<br>
-                2. 移動 500 公尺<br>
-                3. 重新上線 (Online)
+                <b>07-09：</b> 待新北接進城。<br>
+                <b>17-19：</b> 待北市接回程。<br>
             </div>
         </div>
     </div>
 
     <div class="nav-bar">
         <div class="nav-item active" onclick="switchTab('radar')">
-            <div class="nav-icon">📡</div>
-            <div>雷達</div>
+            <div class="nav-icon">📡</div><div>雷達</div>
         </div>
         <div class="nav-item" onclick="switchTab('calc')">
-            <div class="nav-icon">🖩</div>
-            <div>估價</div>
+            <div class="nav-icon">🖩</div><div>估價</div>
         </div>
         <div class="nav-item" onclick="switchTab('strategy')">
-            <div class="nav-icon">📝</div>
-            <div>筆記</div>
+            <div class="nav-icon">📝</div><div>筆記</div>
         </div>
     </div>
 
     <script>
         // ================= 全局設定 =================
-        const MY_LINE_ID = "love_ice_boy"; // ✅ 已填入你的 ID
+        const MY_LINE_ID = "love_ice_boy"; // 你的 ID
 
         // 資料庫初始化
         const defaultSpots = [
             { name: "信義 ATT", lat: 25.0355, lon: 121.5663, price: 550, hours: [22,23,0,1,2,3], note: "夜店單" },
             { name: "內科瑞光", lat: 25.0805, lon: 121.5721, price: 500, hours: [17,18,19], note: "下班潮" },
-            { name: "板橋車站", lat: 25.0139, lon: 121.4640, price: 450, hours: [7,8,9,17,18], note: "高鐵/通勤" },
-            { name: "林口三井", lat: 25.0718, lon: 121.3653, price: 800, hours: [14,15,16,19,20], note: "長途回台北" }
+            { name: "板橋車站", lat: 25.0139, lon: 121.4640, price: 450, hours: [7,8,9,17,18], note: "高鐵/通勤" }
         ];
         let myHotspots = JSON.parse(localStorage.getItem('uberDriverData')) || defaultSpots;
         let currentLat, currentLon;
 
-        // ================= 分頁切換邏輯 =================
+        // ================= 介面邏輯 =================
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.getElementById('tab-' + tabName).classList.add('active');
             const navIndex = tabName === 'radar' ? 0 : tabName === 'calc' ? 1 : 2;
             document.querySelectorAll('.nav-item')[navIndex].classList.add('active');
-            const titles = { 'radar': '獵金雷達 v2.0', 'calc': 'VIP 估價計算機', 'strategy': '駕駛戰略筆記' };
+            const titles = { 'radar': '獵金雷達 v2.0', 'calc': '司機報價單生成器', 'strategy': '駕駛戰略筆記' };
             document.getElementById('pageTitle').innerText = titles[tabName];
             if(tabName === 'calc') updateTrafficStatus();
         }
 
-        // ================= 功能 1: 獵金雷達 =================
+        // 行李選項切換
+        function toggleLuggage() {
+            const show = document.getElementById('hasLuggage').value === 'yes';
+            document.getElementById('luggageSection').style.display = show ? 'block' : 'none';
+        }
+
+        // 寵物選項切換
+        function togglePet() {
+            const show = document.getElementById('hasPet').value === 'yes';
+            document.getElementById('petSection').style.display = show ? 'block' : 'none';
+        }
+
+        // ================= 估價計算機邏輯 (核心修改) =================
+        function updateTrafficStatus() {
+            const now = new Date();
+            const h = now.getHours();
+            const d = now.getDay();
+            const el = document.getElementById('trafficStatus');
+            if(h >= 23 || h < 6) {
+                el.className = "status-tag status-night";
+                el.innerText = "🌙 深夜時段 (費率係數 0.1)";
+                return 0.1;
+            } else if ((d>=1 && d<=5) && ((h>=7 && h<9) || (h>=17 && h<19))) {
+                el.className = "status-tag status-rush";
+                el.innerText = "🔥 尖峰時段 (費率係數 0.5)";
+                return 0.5;
+            } else {
+                el.className = "status-tag status-normal";
+                el.innerText = "☁️ 一般時段 (費率係數 0.3)";
+                return 0.3;
+            }
+        }
+
+        async function calculateFare() {
+            const start = document.getElementById('startAddr').value;
+            const end = document.getElementById('endAddr').value;
+            const timeVal = document.getElementById('bookingTime').value;
+            const pax = document.getElementById('passengerCount').value;
+            const hasLug = document.getElementById('hasLuggage').value === 'yes';
+            const lugCount = document.getElementById('luggageCount').value;
+            const hasPet = document.getElementById('hasPet').value === 'yes';
+
+            if(!start || !end) return alert("請輸入上車和下車地點");
+
+            try {
+                // 1. 抓座標與距離
+                const getC = async (addr) => (await (await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${addr}&limit=1`)).json())[0];
+                const p1 = await getC(start);
+                const p2 = await getC(end);
+                
+                const r = await (await fetch(`https://router.project-osrm.org/route/v1/driving/${p1.lon},${p1.lat};${p2.lon},${p2.lat}?overview=false`)).json();
+                const route = r.routes[0];
+                const km = (route.distance / 1000).toFixed(1);
+                const mins = Math.ceil(route.duration / 60);
+                const factor = updateTrafficStatus();
+                
+                // 2. 計算價格
+                let fare = 85;
+                if(km > 1.25) fare += Math.ceil((km - 1.25) / 0.2) * 5;
+                fare += Math.ceil(mins * factor) * 5;
+
+                // 3. 準備顯示文字
+                const bookingTimeStr = timeVal ? timeVal.replace('T', ' ') : '現場叫車';
+                const lugText = hasLug ? `有 (${lugCount}個)` : '無';
+                const petText = hasPet ? '有 (⚠️需裝籠/拒載大犬)' : '無';
+
+                // 4. 更新畫面
+                document.getElementById('calcResult').style.display = 'block';
+                document.getElementById('displayPrice').innerText = `$${fare}`;
+                document.getElementById('displayDist').innerText = km;
+                document.getElementById('displayTime').innerText = mins;
+                document.getElementById('resPax').innerText = pax;
+                document.getElementById('resLug').innerText = lugText;
+                document.getElementById('resPet').innerText = petText;
+                
+                if(hasPet) document.getElementById('resPet').style.color = '#ff5252';
+                else document.getElementById('resPet').style.color = '#ddd';
+
+                // 5. 設定 LINE 訊息內容
+                const lineMsg = `司機報價單：
+${start} ➡️ ${end}
+📅 時間：${bookingTimeStr}
+💰 預估車資：$${fare}
+(里程 ${km}km / 時間 ${mins}分)
+----------------
+👥 乘客：${pax}人
+🧳 行李：${lugText}
+🐶 寵物：${petText}
+⚠️ 重要備註：請先匯款以保留車輛`;
+
+                document.getElementById('addFriendLink').href = `https://line.me/ti/p/~${MY_LINE_ID}`;
+                document.getElementById('lineLink').href = `https://line.me/R/msg/text/?${encodeURIComponent(lineMsg)}`;
+
+            } catch(e) { alert("計算失敗，請檢查地址是否正確"); console.log(e); }
+        }
+
+        // ================= 雷達邏輯 (保持不變) =================
         const timeSelect = document.getElementById('radarTimeSelect');
         const nowHour = new Date().getHours();
         for(let i=0; i<24; i++) {
@@ -286,63 +404,6 @@
                 localStorage.setItem('uberDriverData', JSON.stringify(myHotspots));
                 findHotspots();
             }
-        }
-
-        // ================= 功能 2: 估價計算機 =================
-        function updateTrafficStatus() {
-            const now = new Date();
-            const h = now.getHours();
-            const d = now.getDay();
-            const el = document.getElementById('trafficStatus');
-            if(h >= 23 || h < 6) {
-                el.className = "status-tag status-night";
-                el.innerText = "🌙 深夜時段 (費率係數 0.1)";
-                return 0.1;
-            } else if ((d>=1 && d<=5) && ((h>=7 && h<9) || (h>=17 && h<19))) {
-                el.className = "status-tag status-rush";
-                el.innerText = "🔥 尖峰時段 (費率係數 0.5)";
-                return 0.5;
-            } else {
-                el.className = "status-tag status-normal";
-                el.innerText = "☁️ 一般時段 (費率係數 0.3)";
-                return 0.3;
-            }
-        }
-
-        async function calculateFare() {
-            const start = document.getElementById('startAddr').value;
-            const end = document.getElementById('endAddr').value;
-            if(!start || !end) return alert("請輸入地址");
-
-            try {
-                const getC = async (addr) => (await (await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${addr}&limit=1`)).json())[0];
-                const p1 = await getC(start);
-                const p2 = await getC(end);
-                
-                const r = await (await fetch(`https://router.project-osrm.org/route/v1/driving/${p1.lon},${p1.lat};${p2.lon},${p2.lat}?overview=false`)).json();
-                const route = r.routes[0];
-                const km = (route.distance / 1000).toFixed(1);
-                const mins = Math.ceil(route.duration / 60);
-                const factor = updateTrafficStatus();
-                
-                let fare = 85;
-                if(km > 1.25) fare += Math.ceil((km - 1.25) / 0.2) * 5;
-                fare += Math.ceil(mins * factor) * 5;
-
-                document.getElementById('calcResult').style.display = 'block';
-                document.getElementById('displayPrice').innerText = `$${fare}`;
-                document.getElementById('displayDist').innerText = km;
-                document.getElementById('displayTime').innerText = mins;
-                document.getElementById('displayFactor').innerText = factor;
-
-                // 1. 設定加好友連結 (你的 ID)
-                document.getElementById('addFriendLink').href = `https://line.me/ti/p/~${MY_LINE_ID}`;
-                
-                // 2. 設定發送報價連結
-                const msg = `司機報價單：\n${start} ➡️ ${end}\n預估車資：$${fare}\n(里程 ${km}km / 時間 ${mins}分)`;
-                document.getElementById('lineLink').href = `https://line.me/R/msg/text/?${encodeURIComponent(msg)}`;
-
-            } catch(e) { alert("計算失敗，請檢查地址"); }
         }
 
         function calcDist(lat1, lon1, lat2, lon2) {
