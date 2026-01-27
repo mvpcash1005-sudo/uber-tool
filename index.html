@@ -3,106 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Uber 全能駕駛戰情室 Pro</title>
+    <title>VIP 專屬預約系統</title>
     <style>
-        /* --- 全局設定 (暗黑駕駛模式) --- */
-        body { background-color: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, Roboto, sans-serif; margin: 0; padding: 0; padding-bottom: 80px; }
-        h2 { margin: 0; padding: 15px; text-align: center; background: #111; color: #00ff99; border-bottom: 1px solid #333; font-size: 18px; }
+        /* --- 視覺設計 (專業黑金風格) --- */
+        body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; padding-bottom: 80px; }
+        h2 { margin: 0; padding: 20px; text-align: center; background: #1e1e1e; color: #00e676; border-bottom: 1px solid #333; font-size: 20px; letter-spacing: 1px; }
         
-        /* --- 底部導航列 --- */
-        .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; background: #1a1a1a; display: flex; border-top: 1px solid #333; z-index: 1000; }
-        .nav-item { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #666; font-size: 12px; cursor: pointer; }
-        .nav-item.active { color: #00ff99; background: #222; }
-        .nav-icon { font-size: 20px; margin-bottom: 3px; }
+        /* 底部導航 */
+        .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; background: #1e1e1e; display: flex; border-top: 1px solid #333; z-index: 1000; box-shadow: 0 -2px 10px rgba(0,0,0,0.5); }
+        .nav-item { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #888; font-size: 11px; cursor: pointer; transition: 0.2s; }
+        .nav-item.active { color: #00e676; background: #252525; }
+        .nav-icon { font-size: 22px; margin-bottom: 4px; }
 
-        /* --- 分頁內容容器 --- */
-        .tab-content { display: none; padding: 15px; animation: fadeIn 0.3s; }
+        /* 分頁 */
+        .tab-content { display: none; padding: 20px; animation: fadeIn 0.4s; max-width: 600px; margin: 0 auto; }
         .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- 通用元件樣式 --- */
-        input, select { width: 100%; padding: 12px; background: #222; border: 1px solid #444; color: #fff; border-radius: 8px; font-size: 16px; margin-bottom: 10px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        label { color: #aaa; font-size: 13px; margin-bottom: 4px; display: block; margin-top: 5px; }
+        /* 輸入欄位 */
+        label { color: #00e676; font-size: 14px; font-weight: bold; margin-bottom: 8px; display: block; margin-top: 15px; }
+        input, select { width: 100%; padding: 14px; background: #2c2c2c; border: 1px solid #444; color: #fff; border-radius: 8px; font-size: 16px; margin-bottom: 5px; box-sizing: border-box; transition: 0.2s; outline: none; }
+        input:focus, select:focus { border-color: #00e676; background: #333; }
         
-        .btn-green { background: #00c853; color: white; }
-        .btn-blue { background: #2979ff; color: white; }
-        .btn-gps { width: 50px; background: #ff9800; color: white; margin-top: 0; }
+        /* 按鈕 */
+        button { width: 100%; padding: 16px; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 25px; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        button:active { transform: scale(0.98); }
+        .btn-calc { background: linear-gradient(135deg, #2979ff, #1565c0); color: white; }
+        .btn-green { background: linear-gradient(135deg, #00e676, #00c853); color: #000; }
+        .btn-gps { width: 50px; background: #ff9800; color: white; margin-top: 0; padding: 12px; }
 
-        /* 隱藏區塊 (用於行李/寵物細節) */
-        .hidden-section { display: none; background: #2a2a2a; padding: 10px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid #ff9800; }
-        .warning-text { color: #ff5252; font-size: 12px; margin-top: 5px; }
+        /* 特殊區塊 */
+        .hidden-section { display: none; background: #2a2a2a; padding: 15px; border-radius: 8px; margin-top: 10px; border-left: 4px solid #ff5252; }
+        .warning-text { color: #ff5252; font-size: 13px; line-height: 1.5; font-weight: bold; }
+        
+        /* 報價結果卡片 */
+        .price-card { background: #1e1e1e; border-radius: 12px; padding: 20px; margin-top: 20px; border: 1px solid #333; box-shadow: 0 10px 20px rgba(0,0,0,0.3); text-align: center; }
+        .big-price { font-size: 48px; color: #00e676; font-weight: bold; margin: 15px 0; text-shadow: 0 0 10px rgba(0, 230, 118, 0.3); }
+        
+        .detail-row { display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding: 8px 0; font-size: 14px; color: #ccc; }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-val { font-weight: bold; color: #fff; }
+        .detail-val.alert { color: #ff5252; }
+
+        /* LINE 按鈕 */
+        .line-btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        .line-btn { flex: 1; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        .btn-friend { background: #444; color: #ccc; border: 1px solid #666; }
+        .btn-send { background: #06c755; color: white; flex: 2; font-size: 16px; }
+
+        /* 狀態標籤 */
+        #trafficStatus { text-align: center; padding: 8px; font-size: 12px; border-radius: 20px; margin-bottom: 10px; background: #333; color: #aaa; }
         
         /* 獵金雷達卡片 */
-        .card { background: #1a1a1a; border-radius: 8px; padding: 15px; margin-bottom: 15px; border-left: 4px solid #444; position: relative; }
-        .card.hot { border-left-color: #ff3d00; } 
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-        .card-title { font-size: 18px; font-weight: bold; }
-        .badge { padding: 3px 6px; border-radius: 4px; font-size: 12px; margin-left: 5px; }
-        .badge-price { background: #00c853; color: #fff; }
-        .badge-dist { background: #2979ff; color: #fff; }
-        .nav-link { display: block; text-align: center; background: #333; padding: 10px; border-radius: 6px; margin-top: 10px; text-decoration: none; color: white; font-weight: bold; }
-
-        /* 估價結果區 */
-        .price-display { text-align: center; margin-top: 20px; padding: 20px; background: #1a1a1a; border-radius: 12px; border: 1px solid #333; }
-        .big-price { font-size: 40px; color: #00ff99; font-weight: bold; margin: 10px 0; }
-        .status-tag { display: inline-block; padding: 5px 12px; border-radius: 15px; font-size: 13px; margin-bottom: 10px; }
-        .status-rush { background: #3e1a1a; color: #ff5252; border: 1px solid #ff5252; }
-        .status-normal { background: #1a2f3e; color: #40c4ff; border: 1px solid #40c4ff; }
-        .status-night { background: #1a3e1a; color: #69f0ae; border: 1px solid #69f0ae; }
-        
-        /* LINE 按鈕群組 */
-        .line-actions { display: flex; gap: 10px; margin-top: 15px; }
-        .btn-add-friend { background: #333; color: #ccc; font-size: 14px; flex: 1; padding: 10px; border-radius: 6px; text-decoration: none; display: flex; align-items: center; justify-content: center; border: 1px solid #555; }
-        .btn-send-quote { background: #06c755; color: white; font-size: 16px; flex: 2; padding: 10px; border-radius: 6px; text-decoration: none; font-weight: bold; display: flex; align-items: center; justify-content: center; }
-
-        /* 戰略筆記區 */
-        .strategy-box { background: #222; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
-        .strategy-title { color: #ffcc00; font-weight: bold; margin-bottom: 5px; display: flex; align-items: center; }
-        .strategy-text { color: #ccc; font-size: 14px; line-height: 1.5; }
+        .radar-card { background: #1e1e1e; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #444; }
+        .radar-card.hot { border-left-color: #ff3d00; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; font-weight: bold; font-size: 16px; }
+        .badge { background: #333; padding: 2px 6px; border-radius: 4px; font-size: 12px; color: #00e676; margin-left: 5px; }
     </style>
 </head>
 <body>
 
-    <h2 id="pageTitle">雷達偵測中...</h2>
+    <h2 id="pageTitle">VIP 預約估價系統</h2>
 
-    <div id="tab-radar" class="tab-content active">
-        <div style="display: flex; gap: 10px;">
-            <input type="text" id="radarInput" placeholder="輸入目前位置...">
-            <button class="btn-gps" onclick="useGPS()">📡</button>
-        </div>
-        <select id="radarTimeSelect" onchange="findHotspots()">
-            </select>
-        <button class="btn-green" onclick="findHotspots()">🔍 掃描熱點</button>
-        <button onclick="toggleAddPanel()" style="background:#333; color:#aaa; font-size:14px; padding:8px;">➕ 新增私房點</button>
-        
-        <div id="addPanel" style="display:none; background:#222; padding:10px; margin-top:10px; border-radius:8px;">
-            <input type="text" id="newName" placeholder="名稱 (例: 內科)">
-            <input type="number" id="newPrice" placeholder="金額 (例: 500)">
-            <input type="text" id="newNote" placeholder="備註">
-            <div style="color:#888; font-size:12px; margin-bottom:5px;">👇 選擇熱門時段 (0-23)</div>
-            <input type="text" id="newHours" placeholder="例: 17,18,19 (用逗號隔開)">
-            <button class="btn-blue" onclick="addSpot()">💾 儲存</button>
-        </div>
-
-        <div id="radarResults" style="margin-top:15px;"></div>
-    </div>
-
-    <div id="tab-calc" class="tab-content">
-        <div id="trafficStatus" class="status-tag status-normal" style="width:100%; text-align:center; box-sizing:border-box;">偵測時段中...</div>
+    <div id="tab-calc" class="tab-content active">
+        <div id="trafficStatus">正在分析即時費率...</div>
         
         <label>📍 上車地點</label>
-        <input type="text" id="startAddr" placeholder="請輸入上車地址">
+        <input type="text" id="startAddr" placeholder="請輸入完整地址或地標">
         
         <label>🏁 下車地點</label>
-        <input type="text" id="endAddr" placeholder="請輸入下車地址">
+        <input type="text" id="endAddr" placeholder="請輸入完整地址或地標">
 
-        <label>📅 預定用車時間</label>
+        <label>📅 預約時間 (現在用車免填)</label>
         <input type="datetime-local" id="bookingTime">
 
-        <div style="display: flex; gap: 10px;">
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
             <div style="flex: 1;">
-                <label>👥 乘客人數</label>
+                <label>👥 人數</label>
                 <select id="passengerCount">
                     <option value="1">1人</option>
                     <option value="2">2人</option>
@@ -111,7 +88,7 @@
                 </select>
             </div>
             <div style="flex: 1;">
-                <label>🧳 是否有行李</label>
+                <label>🧳 行李</label>
                 <select id="hasLuggage" onchange="toggleLuggage()">
                     <option value="no">無</option>
                     <option value="yes">有</option>
@@ -119,57 +96,79 @@
             </div>
         </div>
 
-        <div id="luggageSection" class="hidden-section">
-            <label style="color:#fff; margin-top:0;">🎒 有幾個行李箱？</label>
-            <input type="number" id="luggageCount" placeholder="請輸入數量 (例: 2)" style="margin-bottom:0;">
+        <div id="luggageSection" class="hidden-section" style="border-left-color: #2979ff;">
+            <label style="margin-top:0; color:#fff;">🎒 請問有幾件行李？</label>
+            <input type="number" id="luggageCount" placeholder="例如: 2" style="margin-bottom:0;">
         </div>
 
-        <label>🐶 是否有寵物</label>
+        <label>🐶 寵物 (需裝籠)</label>
         <select id="hasPet" onchange="togglePet()">
             <option value="no">無</option>
             <option value="yes">有</option>
         </select>
 
-        <div id="petSection" class="hidden-section" style="border-left-color: #ff5252;">
-            <div style="font-weight:bold; color:#fff;">⚠️ 寵物乘車規定：</div>
-            <div class="warning-text">• 寵物必須裝籠才載<br>• 恕不搭載大型犬</div>
+        <div id="petSection" class="hidden-section">
+            <div style="color:#fff; margin-bottom:5px;">⚠️ 寵物乘車公約：</div>
+            <div class="warning-text">
+                1. 寵物必須全程裝籠/袋。<br>
+                2. 恕不搭載大型犬。<br>
+                3. 請維護車內整潔。
+            </div>
         </div>
-        <button class="btn-blue" onclick="calculateFare()">💰 產生報價單</button>
+        
+        <button class="btn-calc" onclick="calculateFare()">💰 立即估價</button>
 
-        <div id="calcResult" class="price-display" style="display:none;">
-            <div style="color:#aaa; font-size:12px;">預估車資</div>
+        <div id="calcResult" class="price-card" style="display:none;">
+            <div style="color:#888; font-size:12px;">系統預估車資</div>
             <div class="big-price" id="displayPrice">$0</div>
             
-            <div style="background:#222; padding:10px; border-radius:8px; margin-top:10px; text-align:left; font-size:13px; color:#ddd; line-height:1.6;">
-                📏 里程：<span id="displayDist">0</span> km<br>
-                ⏱️ 時間：<span id="displayTime">0</span> 分<br>
-                👥 乘客：<span id="resPax">1</span>人<br>
-                🧳 行李：<span id="resLug">無</span><br>
-                🐶 寵物：<span id="resPet">無</span><br>
-                ⚠️ <b>注意事項：請先匯款</b>
+            <div class="detail-row"><span>📏 總里程</span><span class="detail-val" id="displayDist">0 km</span></div>
+            <div class="detail-row"><span>⏱️ 預估時間</span><span class="detail-val" id="displayTime">0 分</span></div>
+            <div class="detail-row"><span>👥 乘客人數</span><span class="detail-val" id="resPax">1人</span></div>
+            <div class="detail-row"><span>🧳 行李數量</span><span class="detail-val" id="resLug">無</span></div>
+            <div class="detail-row"><span>🐶 攜帶寵物</span><span class="detail-val" id="resPet">無</span></div>
+            
+            <div style="background:#3e2723; color:#ffcc80; padding:10px; border-radius:6px; margin-top:15px; font-size:13px; text-align:left;">
+                ⚠️ <b>預約須知：</b><br>
+                請先匯款以保留車輛，付款後訂單即成立。
             </div>
             
-            <div style="margin-top:20px; text-align:center; color:#888; font-size:12px; margin-bottom:5px;">👇 傳送給客人 👇</div>
-            <div class="line-actions">
-                <a href="#" id="addFriendLink" target="_blank" class="btn-add-friend">1. 加好友</a>
-                <a href="#" id="lineLink" class="btn-send-quote" target="_blank">2. 發送報價單</a>
+            <div class="line-btn-group">
+                <a href="#" id="addFriendLink" target="_blank" class="line-btn btn-friend">1. 加好友</a>
+                <a href="#" id="lineLink" class="line-btn btn-send" target="_blank">2. 傳送預約單</a>
             </div>
-            <div style="font-size:11px; color:#666; margin-top:5px; text-align:center;">(點擊發送後，請在清單中點選我)</div>
+            <div style="font-size:11px; color:#666; margin-top:8px;">(點擊傳送後，請在好友清單選擇我的名字)</div>
         </div>
     </div>
 
+    <div id="tab-radar" class="tab-content">
+        <div style="display: flex; gap: 10px;">
+            <input type="text" id="radarInput" placeholder="輸入目前位置...">
+            <button class="btn-gps" onclick="useGPS()">📡</button>
+        </div>
+        <select id="radarTimeSelect" onchange="findHotspots()"></select>
+        <button class="btn-green" onclick="findHotspots()">🔍 掃描熱點</button>
+        <button onclick="toggleAddPanel()" style="background:#333; color:#aaa; font-size:14px; padding:8px; width:100%; border:none; margin-top:10px; border-radius:8px;">➕ 新增私房點</button>
+        
+        <div id="addPanel" style="display:none; background:#2c2c2c; padding:15px; margin-top:10px; border-radius:8px;">
+            <input type="text" id="newName" placeholder="名稱 (例: 內科)">
+            <input type="number" id="newPrice" placeholder="金額 (例: 500)">
+            <input type="text" id="newNote" placeholder="備註">
+            <input type="text" id="newHours" placeholder="熱門時段 (例: 17,18,19)">
+            <button class="btn-calc" onclick="addSpot()">💾 儲存</button>
+        </div>
+
+        <div id="radarResults" style="margin-top:15px;"></div>
+    </div>
+
     <div id="tab-strategy" class="tab-content">
-        <div class="strategy-box">
-            <div class="strategy-title">🛑 停損法則</div>
-            <div class="strategy-text">接人>8分鐘拒接，除非加成>1.5x。</div>
+        <div class="radar-card">
+            <div class="card-header" style="color:#ffcc00;">🛑 停損法則</div>
+            <div style="color:#ccc; font-size:14px;">接人>8分鐘拒接，除非加成>1.5x。</div>
         </div>
-        <div class="strategy-box">
-            <div class="strategy-title">⚖️ 黃金比例 (1:2)</div>
-            <div class="strategy-text">接人5分鐘，行程至少要10分鐘。</div>
-        </div>
-        <div class="strategy-box">
-            <div class="strategy-title">🗺️ 地形戰術</div>
-            <div class="strategy-text">
+        <div class="radar-card">
+            <div class="card-header" style="color:#00e676;">🗺️ 地形戰術</div>
+            <div style="color:#ccc; font-size:14px;">
                 <b>07-09：</b> 待新北接進城。<br>
                 <b>17-19：</b> 待北市接回程。<br>
             </div>
@@ -177,11 +176,11 @@
     </div>
 
     <div class="nav-bar">
-        <div class="nav-item active" onclick="switchTab('radar')">
-            <div class="nav-icon">📡</div><div>雷達</div>
+        <div class="nav-item active" onclick="switchTab('calc')">
+            <div class="nav-icon">🚕</div><div>預約</div>
         </div>
-        <div class="nav-item" onclick="switchTab('calc')">
-            <div class="nav-icon">🖩</div><div>估價</div>
+        <div class="nav-item" onclick="switchTab('radar')">
+            <div class="nav-icon">📡</div><div>雷達</div>
         </div>
         <div class="nav-item" onclick="switchTab('strategy')">
             <div class="nav-icon">📝</div><div>筆記</div>
@@ -206,42 +205,42 @@
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.getElementById('tab-' + tabName).classList.add('active');
-            const navIndex = tabName === 'radar' ? 0 : tabName === 'calc' ? 1 : 2;
-            document.querySelectorAll('.nav-item')[navIndex].classList.add('active');
-            const titles = { 'radar': '獵金雷達 v2.0', 'calc': '司機報價單生成器', 'strategy': '駕駛戰略筆記' };
-            document.getElementById('pageTitle').innerText = titles[tabName];
+            
+            // 更新導航亮燈
+            const index = tabName === 'calc' ? 0 : tabName === 'radar' ? 1 : 2;
+            document.querySelectorAll('.nav-item')[index].classList.add('active');
+            
             if(tabName === 'calc') updateTrafficStatus();
         }
 
-        // 行李選項切換
         function toggleLuggage() {
             const show = document.getElementById('hasLuggage').value === 'yes';
             document.getElementById('luggageSection').style.display = show ? 'block' : 'none';
         }
 
-        // 寵物選項切換
         function togglePet() {
             const show = document.getElementById('hasPet').value === 'yes';
             document.getElementById('petSection').style.display = show ? 'block' : 'none';
         }
 
-        // ================= 估價計算機邏輯 (核心修改) =================
+        // ================= 估價計算機邏輯 =================
         function updateTrafficStatus() {
             const now = new Date();
             const h = now.getHours();
             const d = now.getDay();
             const el = document.getElementById('trafficStatus');
+            
             if(h >= 23 || h < 6) {
-                el.className = "status-tag status-night";
-                el.innerText = "🌙 深夜時段 (費率係數 0.1)";
+                el.innerText = "🌙 目前為深夜時段 (車流順暢)";
+                el.style.color = "#00e676";
                 return 0.1;
             } else if ((d>=1 && d<=5) && ((h>=7 && h<9) || (h>=17 && h<19))) {
-                el.className = "status-tag status-rush";
-                el.innerText = "🔥 尖峰時段 (費率係數 0.5)";
+                el.innerText = "🔥 目前為尖峰時段 (車流擁塞)";
+                el.style.color = "#ff5252";
                 return 0.5;
             } else {
-                el.className = "status-tag status-normal";
-                el.innerText = "☁️ 一般時段 (費率係數 0.3)";
+                el.innerText = "☁️ 目前為一般時段";
+                el.style.color = "#aaa";
                 return 0.3;
             }
         }
@@ -257,65 +256,92 @@
 
             if(!start || !end) return alert("請輸入上車和下車地點");
 
+            // 按鈕變loading
+            const btn = document.querySelector('.btn-calc');
+            const originalText = btn.innerText;
+            btn.innerText = "⏳ 計算路徑中...";
+            btn.disabled = true;
+
             try {
-                // 1. 抓座標與距離
-                const getC = async (addr) => (await (await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${addr}&limit=1`)).json())[0];
-                const p1 = await getC(start);
-                const p2 = await getC(end);
+                // 智慧搜尋座標
+                const getCoords = async (addr) => {
+                    const query = addr.includes('台灣') ? addr : '台灣 ' + addr;
+                    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
+                    const res = await fetch(url);
+                    const data = await res.json();
+                    return data.length > 0 ? data[0] : null;
+                };
+
+                const p1 = await getCoords(start);
+                if (!p1) throw new Error(`找不到上車地點：${start}`);
+                const p2 = await getCoords(end);
+                if (!p2) throw new Error(`找不到下車地點：${end}`);
                 
+                // 計算路徑
                 const r = await (await fetch(`https://router.project-osrm.org/route/v1/driving/${p1.lon},${p1.lat};${p2.lon},${p2.lat}?overview=false`)).json();
+                if (r.code !== "Ok") throw new Error("無法規劃路徑");
+
                 const route = r.routes[0];
                 const km = (route.distance / 1000).toFixed(1);
                 const mins = Math.ceil(route.duration / 60);
                 const factor = updateTrafficStatus();
                 
-                // 2. 計算價格
+                // 價格公式
                 let fare = 85;
                 if(km > 1.25) fare += Math.ceil((km - 1.25) / 0.2) * 5;
                 fare += Math.ceil(mins * factor) * 5;
 
-                // 3. 準備顯示文字
-                const bookingTimeStr = timeVal ? timeVal.replace('T', ' ') : '現場叫車';
-                const lugText = hasLug ? `有 (${lugCount}個)` : '無';
-                const petText = hasPet ? '有 (⚠️需裝籠/拒載大犬)' : '無';
+                // 準備文字
+                const bookingTimeStr = timeVal ? timeVal.replace('T', ' ') : '現場/立即出發';
+                const lugText = hasLug ? `有 (${lugCount}件)` : '無';
+                const petText = hasPet ? '有 (⚠️已同意裝籠/無大犬)' : '無';
 
-                // 4. 更新畫面
+                // 更新畫面
                 document.getElementById('calcResult').style.display = 'block';
                 document.getElementById('displayPrice').innerText = `$${fare}`;
-                document.getElementById('displayDist').innerText = km;
-                document.getElementById('displayTime').innerText = mins;
-                document.getElementById('resPax').innerText = pax;
+                document.getElementById('displayDist').innerText = `${km} km`;
+                document.getElementById('displayTime').innerText = `${mins} 分`;
+                document.getElementById('resPax').innerText = `${pax} 人`;
                 document.getElementById('resLug').innerText = lugText;
-                document.getElementById('resPet').innerText = petText;
                 
-                if(hasPet) document.getElementById('resPet').style.color = '#ff5252';
-                else document.getElementById('resPet').style.color = '#ddd';
+                const petEl = document.getElementById('resPet');
+                petEl.innerText = petText;
+                petEl.className = hasPet ? 'detail-val alert' : 'detail-val';
 
-                // 5. 設定 LINE 訊息內容
-                const lineMsg = `司機報價單：
-${start} ➡️ ${end}
+                // LINE 訊息生成 (這是客人傳給你的內容)
+                const lineMsg = `🙋‍♂️ 我要預約叫車
 📅 時間：${bookingTimeStr}
-💰 預估車資：$${fare}
-(里程 ${km}km / 時間 ${mins}分)
+📍 上車：${start}
+🏁 下車：${end}
+💰 系統估價：$${fare}
 ----------------
-👥 乘客：${pax}人
+👥 人數：${pax}人
 🧳 行李：${lugText}
 🐶 寵物：${petText}
-⚠️ 重要備註：請先匯款以保留車輛`;
+⚠️ 備註：我同意先匯款以保留車輛`;
 
                 document.getElementById('addFriendLink').href = `https://line.me/ti/p/~${MY_LINE_ID}`;
                 document.getElementById('lineLink').href = `https://line.me/R/msg/text/?${encodeURIComponent(lineMsg)}`;
+                
+                // 滾動到結果
+                document.getElementById('calcResult').scrollIntoView({behavior: "smooth"});
 
-            } catch(e) { alert("計算失敗，請檢查地址是否正確"); console.log(e); }
+            } catch(e) { 
+                alert(e.message || "發生錯誤，請檢查網路"); 
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
         }
 
-        // ================= 雷達邏輯 (保持不變) =================
+        // ================= 雷達邏輯 =================
+        // (省略重複部分，保持原本功能運作)
         const timeSelect = document.getElementById('radarTimeSelect');
         const nowHour = new Date().getHours();
         for(let i=0; i<24; i++) {
             let opt = document.createElement('option');
             opt.value = i;
-            opt.text = `${i}:00 時段 ${i===nowHour ? '(現在)' : ''}`;
+            opt.text = `${i}:00 時段`;
             if(i===nowHour) opt.selected = true;
             timeSelect.add(opt);
         }
@@ -353,14 +379,14 @@ ${start} ➡️ ${end}
                 results.slice(0, 10).forEach(spot => {
                     const hotClass = spot.isHot ? 'hot' : '';
                     div.innerHTML += `
-                        <div class="card ${hotClass}">
+                        <div class="radar-card ${hotClass}">
                             <div class="card-header">
-                                <span class="card-title">${spot.name}</span>
-                                <div><span class="badge badge-price">$${spot.price}</span><span class="badge badge-dist">${spot.dist.toFixed(1)}km</span></div>
+                                <span>${spot.name}</span>
+                                <div><span class="badge">$${spot.price}</span><span class="badge" style="color:#2979ff">${spot.dist.toFixed(1)}km</span></div>
                             </div>
                             <div style="color:#888; font-size:13px;">${spot.note}</div>
                             ${spot.isHot ? '<div style="color:#ff3d00; font-size:12px; margin-top:5px;">🔥 熱門時段</div>' : ''}
-                            <a href="https://www.google.com/maps/dir/?api=1&destination=${spot.lat},${spot.lon}" target="_blank" class="nav-link">🚀 導航</a>
+                            <a href="https://www.google.com/maps/dir/?api=1&destination=${spot.lat},${spot.lon}" target="_blank" class="nav-link" style="margin-top:10px;">🚀 導航</a>
                             <div style="text-align:right; margin-top:5px; font-size:12px; color:#666; cursor:pointer;" onclick="delSpot(${spot.id})">刪除</div>
                         </div>`;
                 });
@@ -389,7 +415,6 @@ ${start} ➡️ ${end}
                 const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${name}&limit=1`);
                 const data = await res.json();
                 if(data.length) { lat = data[0].lat; lon = data[0].lon; }
-                else return alert("抓不到座標，請先開啟 GPS 定位");
             }
             myHotspots.push({ name, price, note, hours, lat, lon });
             localStorage.setItem('uberDriverData', JSON.stringify(myHotspots));
@@ -414,7 +439,8 @@ ${start} ➡️ ${end}
             return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         }
 
-        switchTab('radar'); 
+        // 初始化
+        switchTab('calc'); 
     </script>
 </body>
 </html>
