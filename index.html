@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VIP 專屬預約系統</title>
+    <title>VIP 預約估價系統 (2026春節版)</title>
     <style>
         /* --- 視覺設計 (專業黑金風格) --- */
         body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; padding-bottom: 80px; }
@@ -44,6 +44,7 @@
         .detail-row:last-child { border-bottom: none; }
         .detail-val { font-weight: bold; color: #fff; }
         .detail-val.alert { color: #ff5252; }
+        .detail-val.bonus { color: #ffeb3b; } /* 加成色 */
 
         /* LINE 按鈕 */
         .line-btn-group { display: flex; gap: 10px; margin-top: 20px; }
@@ -52,7 +53,7 @@
         .btn-send { background: #06c755; color: white; flex: 2; font-size: 16px; }
 
         /* 狀態標籤 */
-        #trafficStatus { text-align: center; padding: 8px; font-size: 12px; border-radius: 20px; margin-bottom: 10px; background: #333; color: #aaa; }
+        #trafficStatus { text-align: center; padding: 8px; font-size: 12px; border-radius: 20px; margin-bottom: 10px; background: #333; color: #aaa; border: 1px solid #444; }
         
         /* 獵金雷達卡片 */
         .radar-card { background: #1e1e1e; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #444; }
@@ -74,8 +75,8 @@
         <label>🏁 下車地點</label>
         <input type="text" id="endAddr" placeholder="請輸入完整地址或地標">
 
-        <label>📅 預約時間 (現在用車免填)</label>
-        <input type="datetime-local" id="bookingTime">
+        <label>📅 預約時間</label>
+        <input type="datetime-local" id="bookingTime" onchange="updateRateInfo()">
 
         <div style="display: flex; gap: 10px; margin-top: 10px;">
             <div style="flex: 1;">
@@ -128,6 +129,11 @@
             <div class="detail-row"><span>🧳 行李數量</span><span class="detail-val" id="resLug">無</span></div>
             <div class="detail-row"><span>🐶 攜帶寵物</span><span class="detail-val" id="resPet">無</span></div>
             
+            <div id="surchargeRow" class="detail-row" style="display:none;">
+                <span style="color:#ffeb3b;">🧧 春節/夜間加成</span>
+                <span class="detail-val bonus" id="resBonus">+$0</span>
+            </div>
+            
             <div style="background:#3e2723; color:#ffcc80; padding:10px; border-radius:6px; margin-top:15px; font-size:13px; text-align:left;">
                 ⚠️ <b>預約須知：</b><br>
                 請先匯款以保留車輛，付款後訂單即成立。
@@ -163,8 +169,12 @@
 
     <div id="tab-strategy" class="tab-content">
         <div class="radar-card">
-            <div class="card-header" style="color:#ffcc00;">🛑 停損法則</div>
-            <div style="color:#ccc; font-size:14px;">接人>8分鐘拒接，除非加成>1.5x。</div>
+            <div class="card-header" style="color:#ffcc00;">🧧 2026 春節加成</div>
+            <div style="color:#ccc; font-size:14px;">
+                <b>雙北/基隆：</b> 2/11~2/22 (每趟+30)<br>
+                <b>夜間(23-06)：</b> 再+20 (共+50)<br>
+                <b>桃園：</b> 2/13起 (每趟+50)
+            </div>
         </div>
         <div class="radar-card">
             <div class="card-header" style="color:#00e676;">🗺️ 地形戰術</div>
@@ -210,7 +220,7 @@
             const index = tabName === 'calc' ? 0 : tabName === 'radar' ? 1 : 2;
             document.querySelectorAll('.nav-item')[index].classList.add('active');
             
-            if(tabName === 'calc') updateTrafficStatus();
+            if(tabName === 'calc') updateRateInfo();
         }
 
         function toggleLuggage() {
@@ -223,26 +233,43 @@
             document.getElementById('petSection').style.display = show ? 'block' : 'none';
         }
 
-        // ================= 估價計算機邏輯 =================
-        function updateTrafficStatus() {
-            const now = new Date();
+        // ================= 費率邏輯 (含2026春節) =================
+        
+        // 檢查是否為 2026 春節期間 (雙北: 2/11 - 2/22)
+        function checkSpringFestival(dateObj) {
+            // 注意：JavaScript 月份是 0-11，所以 2月是 1
+            const start = new Date(2026, 1, 11, 0, 0, 0); // 2026/2/11 00:00
+            const end = new Date(2026, 1, 22, 23, 59, 59); // 2026/2/22 23:59
+            return dateObj >= start && dateObj <= end;
+        }
+
+        function updateRateInfo() {
+            const inputTime = document.getElementById('bookingTime').value;
+            const now = inputTime ? new Date(inputTime) : new Date();
             const h = now.getHours();
-            const d = now.getDay();
-            const el = document.getElementById('trafficStatus');
             
-            if(h >= 23 || h < 6) {
-                el.innerText = "🌙 目前為深夜時段 (車流順暢)";
-                el.style.color = "#00e676";
-                return 0.1;
-            } else if ((d>=1 && d<=5) && ((h>=7 && h<9) || (h>=17 && h<19))) {
-                el.innerText = "🔥 目前為尖峰時段 (車流擁塞)";
-                el.style.color = "#ff5252";
-                return 0.5;
+            const isSpring = checkSpringFestival(now);
+            const isNight = (h >= 23 || h < 6);
+            
+            const el = document.getElementById('trafficStatus');
+            let text = "";
+            let color = "#aaa";
+
+            if (isSpring) {
+                text = "🧧 春節加成期間 (每趟+$30)";
+                color = "#ffeb3b"; // 金黃色
+                if (isNight) text += " + 夜間加成 (共+$50)";
+            } else if (isNight) {
+                text = "🌙 夜間加成時段 (+$20)";
+                color = "#00e676"; // 綠色
             } else {
-                el.innerText = "☁️ 目前為一般時段";
-                el.style.color = "#aaa";
-                return 0.3;
+                text = "☁️ 一般計費時段";
             }
+            
+            el.innerText = text;
+            el.style.color = color;
+            if(isSpring) el.style.border = "1px solid #ffeb3b";
+            else el.style.border = "1px solid #444";
         }
 
         async function calculateFare() {
@@ -256,14 +283,13 @@
 
             if(!start || !end) return alert("請輸入上車和下車地點");
 
-            // 按鈕變loading
             const btn = document.querySelector('.btn-calc');
             const originalText = btn.innerText;
-            btn.innerText = "⏳ 計算路徑中...";
+            btn.innerText = "⏳ 計算中...";
             btn.disabled = true;
 
             try {
-                // 智慧搜尋座標
+                // 1. 座標搜尋
                 const getCoords = async (addr) => {
                     const query = addr.includes('台灣') ? addr : '台灣 ' + addr;
                     const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
@@ -273,47 +299,90 @@
                 };
 
                 const p1 = await getCoords(start);
-                if (!p1) throw new Error(`找不到上車地點：${start}`);
+                if (!p1) { alert(`找不到上車點：${start} (請試著減少門牌號碼)`); throw new Error("地址錯誤"); }
                 const p2 = await getCoords(end);
-                if (!p2) throw new Error(`找不到下車地點：${end}`);
+                if (!p2) { alert(`找不到下車點：${end}`); throw new Error("地址錯誤"); }
                 
-                // 計算路徑
+                // 2. 路徑計算
                 const r = await (await fetch(`https://router.project-osrm.org/route/v1/driving/${p1.lon},${p1.lat};${p2.lon},${p2.lat}?overview=false`)).json();
                 if (r.code !== "Ok") throw new Error("無法規劃路徑");
 
                 const route = r.routes[0];
                 const km = (route.distance / 1000).toFixed(1);
                 const mins = Math.ceil(route.duration / 60);
-                const factor = updateTrafficStatus();
                 
-                // 價格公式
-                let fare = 85;
+                // 3. 費率計算 (2026新制)
+                // 基礎費率
+                let fare = 85; 
                 if(km > 1.25) fare += Math.ceil((km - 1.25) / 0.2) * 5;
-                fare += Math.ceil(mins * factor) * 5;
+                
+                // 延滯計時 (新制：60秒5元 = 1分鐘5元)
+                // OSRM 給的是行駛時間，我們需估算「塞車/紅燈」時間
+                // 尖峰時段假設行駛時間的 40% 是在怠速，離峰 10%
+                const bookingDate = timeVal ? new Date(timeVal) : new Date();
+                const h = bookingDate.getHours();
+                const d = bookingDate.getDay();
+                
+                let idleFactor = 0.2; // 預設 20% 時間在停等
+                if ((d>=1 && d<=5) && ((h>=7 && h<9) || (h>=17 && h<19))) idleFactor = 0.5; // 尖峰
+                
+                const idleMins = Math.ceil(mins * idleFactor);
+                fare += idleMins * 5;
 
-                // 準備文字
-                const bookingTimeStr = timeVal ? timeVal.replace('T', ' ') : '現場/立即出發';
-                const lugText = hasLug ? `有 (${lugCount}件)` : '無';
-                const petText = hasPet ? '有 (⚠️已同意裝籠/無大犬)' : '無';
+                // 4. 加成計算 (春節 & 夜間)
+                const isSpring = checkSpringFestival(bookingDate);
+                const isNight = (h >= 23 || h < 6);
+                let surcharge = 0;
+                let surchargeText = "";
 
-                // 更新畫面
+                if (isSpring) {
+                    surcharge += 30; // 春節基本 +30
+                    if (isNight) {
+                        surcharge += 20; // 夜間再 +20
+                        surchargeText = "春節+夜間 (+$50)";
+                    } else {
+                        surchargeText = "春節加成 (+$30)";
+                    }
+                } else if (isNight) {
+                    surcharge += 20; // 平日夜間 +20
+                    surchargeText = "夜間加成 (+$20)";
+                }
+
+                const totalFare = fare + surcharge;
+
+                // 5. 更新畫面
                 document.getElementById('calcResult').style.display = 'block';
-                document.getElementById('displayPrice').innerText = `$${fare}`;
+                document.getElementById('displayPrice').innerText = `$${totalFare}`;
                 document.getElementById('displayDist').innerText = `${km} km`;
                 document.getElementById('displayTime').innerText = `${mins} 分`;
                 document.getElementById('resPax').innerText = `${pax} 人`;
-                document.getElementById('resLug').innerText = lugText;
+                document.getElementById('resLug').innerText = hasLug ? `有 (${lugCount}件)` : '無';
                 
                 const petEl = document.getElementById('resPet');
-                petEl.innerText = petText;
+                petEl.innerText = hasPet ? '有 (⚠️已同意裝籠/無大犬)' : '無';
                 petEl.className = hasPet ? 'detail-val alert' : 'detail-val';
 
-                // LINE 訊息生成 (這是客人傳給你的內容)
+                // 顯示加成
+                const bonusEl = document.getElementById('surchargeRow');
+                if (surcharge > 0) {
+                    bonusEl.style.display = 'flex';
+                    document.getElementById('resBonus').innerText = surchargeText;
+                } else {
+                    bonusEl.style.display = 'none';
+                }
+
+                // 6. LINE 訊息
+                const bookingTimeStr = timeVal ? timeVal.replace('T', ' ') : '現場/立即出發';
+                const lugText = hasLug ? `有 (${lugCount}件)` : '無';
+                const petText = hasPet ? '有 (⚠️已同意裝籠)' : '無';
+                const bonusMsg = surcharge > 0 ? `\n🧧 加成：${surchargeText}` : '';
+
                 const lineMsg = `🙋‍♂️ 我要預約叫車
 📅 時間：${bookingTimeStr}
 📍 上車：${start}
 🏁 下車：${end}
-💰 系統估價：$${fare}
+💰 系統估價：$${totalFare}${bonusMsg}
+(里程 ${km}km / 時間 ${mins}分)
 ----------------
 👥 人數：${pax}人
 🧳 行李：${lugText}
@@ -323,7 +392,6 @@
                 document.getElementById('addFriendLink').href = `https://line.me/ti/p/~${MY_LINE_ID}`;
                 document.getElementById('lineLink').href = `https://line.me/R/msg/text/?${encodeURIComponent(lineMsg)}`;
                 
-                // 滾動到結果
                 document.getElementById('calcResult').scrollIntoView({behavior: "smooth"});
 
             } catch(e) { 
@@ -334,8 +402,7 @@
             }
         }
 
-        // ================= 雷達邏輯 =================
-        // (省略重複部分，保持原本功能運作)
+        // ================= 雷達邏輯 (保持不變) =================
         const timeSelect = document.getElementById('radarTimeSelect');
         const nowHour = new Date().getHours();
         for(let i=0; i<24; i++) {
