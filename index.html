@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VIP 預約估價系統 (2026 智慧版)</title>
+    <title>VIP 預約估價系統 (完整版)</title>
     <style>
         /* --- 視覺設計 (專業黑金風格) --- */
         body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; padding-bottom: 80px; }
@@ -45,6 +45,12 @@
         .detail-val { font-weight: bold; color: #fff; }
         .detail-val.alert { color: #ff5252; }
         .detail-val.bonus { color: #ffeb3b; }
+
+        /* 匯款資訊卡 */
+        .bank-card { background: #2d2d2d; border: 1px solid #444; border-radius: 8px; padding: 15px; margin-top: 15px; text-align: left; }
+        .bank-title { color: #ffb74d; font-size: 14px; font-weight: bold; margin-bottom: 10px; border-bottom: 1px dashed #555; padding-bottom: 5px; }
+        .bank-info { font-size: 14px; color: #fff; line-height: 1.8; font-family: monospace; }
+        .copy-hint { font-size: 11px; color: #888; float: right; margin-top: 3px; }
 
         /* LINE 按鈕 */
         .line-btn-group { display: flex; gap: 10px; margin-top: 20px; }
@@ -134,9 +140,15 @@
                 <span class="detail-val bonus" id="resBonus">+$0</span>
             </div>
             
-            <div style="background:#3e2723; color:#ffcc80; padding:10px; border-radius:6px; margin-top:15px; font-size:13px; text-align:left;">
-                ⚠️ <b>預約須知：</b><br>
-                請先匯款以保留車輛，付款後訂單即成立。
+            <div class="bank-card">
+                <div class="bank-title">⚠️ 請先匯款以保留車輛</div>
+                <div class="bank-info">
+                    <b>🏦 國泰世華 (013)</b><br>
+                    <span style="color:#00e676; font-size:16px;">125506256272</span><br>
+                    <br>
+                    <b>🔴 街口支付 (396)</b><br>
+                    <span style="color:#00e676; font-size:16px;">909191462</span>
+                </div>
             </div>
             
             <div class="line-btn-group">
