@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VIP 預約估價系統 (2026春節版)</title>
+    <title>VIP 預約估價系統 (2026 智慧版)</title>
     <style>
         /* --- 視覺設計 (專業黑金風格) --- */
         body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; padding-bottom: 80px; }
@@ -44,7 +44,7 @@
         .detail-row:last-child { border-bottom: none; }
         .detail-val { font-weight: bold; color: #fff; }
         .detail-val.alert { color: #ff5252; }
-        .detail-val.bonus { color: #ffeb3b; } /* 加成色 */
+        .detail-val.bonus { color: #ffeb3b; }
 
         /* LINE 按鈕 */
         .line-btn-group { display: flex; gap: 10px; margin-top: 20px; }
@@ -69,11 +69,11 @@
     <div id="tab-calc" class="tab-content active">
         <div id="trafficStatus">正在分析即時費率...</div>
         
-        <label>📍 上車地點</label>
-        <input type="text" id="startAddr" placeholder="請輸入完整地址或地標">
+        <label>📍 上車地點 (請輸入完整地址)</label>
+        <input type="text" id="startAddr" placeholder="例：新莊區昌平街326號">
         
         <label>🏁 下車地點</label>
-        <input type="text" id="endAddr" placeholder="請輸入完整地址或地標">
+        <input type="text" id="endAddr" placeholder="例：桃園機場第二航廈">
 
         <label>📅 預約時間</label>
         <input type="datetime-local" id="bookingTime" onchange="updateRateInfo()">
@@ -237,9 +237,8 @@
         
         // 檢查是否為 2026 春節期間 (雙北: 2/11 - 2/22)
         function checkSpringFestival(dateObj) {
-            // 注意：JavaScript 月份是 0-11，所以 2月是 1
-            const start = new Date(2026, 1, 11, 0, 0, 0); // 2026/2/11 00:00
-            const end = new Date(2026, 1, 22, 23, 59, 59); // 2026/2/22 23:59
+            const start = new Date(2026, 1, 11, 0, 0, 0); // 2026/2/11
+            const end = new Date(2026, 1, 22, 23, 59, 59); // 2026/2/22
             return dateObj >= start && dateObj <= end;
         }
 
@@ -272,6 +271,36 @@
             else el.style.border = "1px solid #444";
         }
 
+        // ================= 智慧搜尋 & 估價核心邏輯 =================
+        
+        // 這是最關鍵的部分：找不到門牌時，自動切換成搜尋路名
+        async function smartSearch(addr) {
+            // 1. 基本處理：加上「台灣」提高準確度
+            const queryFull = addr.includes('台灣') ? addr : '台灣 ' + addr;
+            
+            // 2. 第一次嘗試：搜尋完整地址
+            let url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(queryFull)}&limit=1`;
+            let res = await fetch(url);
+            let data = await res.json();
+            
+            if (data.length > 0) return data[0]; // 成功找到
+
+            // 3. 第二次嘗試：如果失敗，嘗試移除數字 (模糊搜尋)
+            // 例如：昌平街326號 -> 昌平街 (只抓路名來算距離，誤差很小)
+            const fuzzyAddr = addr.replace(/\d+[-]*\d*號/, '').replace(/\d+樓/, '');
+            if (fuzzyAddr !== addr) {
+                console.log(`完整地址失敗，嘗試模糊搜尋：${fuzzyAddr}`);
+                const queryFuzzy = '台灣 ' + fuzzyAddr;
+                url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(queryFuzzy)}&limit=1`;
+                res = await fetch(url);
+                data = await res.json();
+                
+                if (data.length > 0) return data[0]; // 成功找到路名
+            }
+            
+            return null; // 真的找不到
+        }
+
         async function calculateFare() {
             const start = document.getElementById('startAddr').value;
             const end = document.getElementById('endAddr').value;
@@ -285,23 +314,16 @@
 
             const btn = document.querySelector('.btn-calc');
             const originalText = btn.innerText;
-            btn.innerText = "⏳ 計算中...";
+            btn.innerText = "⏳ 智慧搜尋中...";
             btn.disabled = true;
 
             try {
-                // 1. 座標搜尋
-                const getCoords = async (addr) => {
-                    const query = addr.includes('台灣') ? addr : '台灣 ' + addr;
-                    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
-                    const res = await fetch(url);
-                    const data = await res.json();
-                    return data.length > 0 ? data[0] : null;
-                };
-
-                const p1 = await getCoords(start);
-                if (!p1) { alert(`找不到上車點：${start} (請試著減少門牌號碼)`); throw new Error("地址錯誤"); }
-                const p2 = await getCoords(end);
-                if (!p2) { alert(`找不到下車點：${end}`); throw new Error("地址錯誤"); }
+                // 使用新的智慧搜尋函數
+                const p1 = await smartSearch(start);
+                if (!p1) { alert(`❌ 找不到上車點：${start}\n建議：請檢查路名是否有錯`); throw new Error("地址錯誤"); }
+                
+                const p2 = await smartSearch(end);
+                if (!p2) { alert(`❌ 找不到下車點：${end}`); throw new Error("地址錯誤"); }
                 
                 // 2. 路徑計算
                 const r = await (await fetch(`https://router.project-osrm.org/route/v1/driving/${p1.lon},${p1.lat};${p2.lon},${p2.lat}?overview=false`)).json();
@@ -312,19 +334,15 @@
                 const mins = Math.ceil(route.duration / 60);
                 
                 // 3. 費率計算 (2026新制)
-                // 基礎費率
                 let fare = 85; 
                 if(km > 1.25) fare += Math.ceil((km - 1.25) / 0.2) * 5;
                 
-                // 延滯計時 (新制：60秒5元 = 1分鐘5元)
-                // OSRM 給的是行駛時間，我們需估算「塞車/紅燈」時間
-                // 尖峰時段假設行駛時間的 40% 是在怠速，離峰 10%
+                // 延滯計時
                 const bookingDate = timeVal ? new Date(timeVal) : new Date();
                 const h = bookingDate.getHours();
                 const d = bookingDate.getDay();
-                
-                let idleFactor = 0.2; // 預設 20% 時間在停等
-                if ((d>=1 && d<=5) && ((h>=7 && h<9) || (h>=17 && h<19))) idleFactor = 0.5; // 尖峰
+                let idleFactor = 0.2; 
+                if ((d>=1 && d<=5) && ((h>=7 && h<9) || (h>=17 && h<19))) idleFactor = 0.5;
                 
                 const idleMins = Math.ceil(mins * idleFactor);
                 fare += idleMins * 5;
@@ -344,7 +362,7 @@
                         surchargeText = "春節加成 (+$30)";
                     }
                 } else if (isNight) {
-                    surcharge += 20; // 平日夜間 +20
+                    surcharge += 20; 
                     surchargeText = "夜間加成 (+$20)";
                 }
 
@@ -371,7 +389,7 @@
                     bonusEl.style.display = 'none';
                 }
 
-                // 6. LINE 訊息
+                // 6. LINE 訊息 (使用原始輸入的詳細地址)
                 const bookingTimeStr = timeVal ? timeVal.replace('T', ' ') : '現場/立即出發';
                 const lugText = hasLug ? `有 (${lugCount}件)` : '無';
                 const petText = hasPet ? '有 (⚠️已同意裝籠)' : '無';
